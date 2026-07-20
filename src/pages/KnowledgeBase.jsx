@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Cpu, Search, BookOpen, ChevronRight, Cpu, Copy, FileText } from 'lucide-react';
+import { Cpu, Search, BookOpen, ChevronRight, Copy, FileText } from 'lucide-react';
 import {
   Box,
   Card,
