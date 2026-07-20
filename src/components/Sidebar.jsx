@@ -7,7 +7,6 @@ import {
   PhoneCall,
   Users,
   Ticket,
-  Cpu,
   BookOpen,
   BarChart3,
   FileText,
