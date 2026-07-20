@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MOCK_COMPANIES } from '../MockData';
 import {
-  Cpu,
   ArrowLeft,
   User,
   Phone,
