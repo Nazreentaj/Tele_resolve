@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeleResolve AI - Live Product Demo</title>
+
+  <!-- Google Fonts: Inter and Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+  <!-- React 18 & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- Babel Standalone (for in-browser JSX rendering) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Emotion (MUI dependencies) -->
+  <script src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js" crossorigin></script>
+
+  <!-- Material UI (MUI v5) -->
+  <script src="https://unpkg.com/@mui/material@5.15.0/umd/material-ui.production.min.js" crossorigin></script>
+
+  <!-- Recharts Dependencies & Library -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #1E3A5F;
+      --secondary-color: #64748B;
+      --accent-color: #0F766E;
+      --background-color: #F8FAFC;
+      --success-color: #22C55E;
+      --warning-color: #F59E0B;
+      --danger-color: #EF4444;
+      --font-family: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: #1E293B;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    .card-hover {
+      transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    }
+    .card-hover:hover {
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React code with Babel -->
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+    const {
+      Box, Card, Typography, TextField, Button, Grid, CircularProgress, Alert, Snackbar,
+      Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+      Chip, IconButton, LinearProgress, Divider, List, ListItem, ListItemText, FormControl,
+      InputLabel, Select, MenuItem, Checkbox, FormControlLabel, InputAdornment, Menu, Switch, Slider, Icon, Avatar
+    } = MaterialUI;
+    const {
+      ResponsiveContainer, LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, Legend, CartesianGrid
+    } = Recharts;
+
+    // =========================================================================
+    // MOCK DATA LAYER
+    // =========================================================================
+    const MOCK_COMPANIES = [
+      { id: 'airtel', name: 'Airtel', logoColor: '#E31837', code: 'ARTL' },
+      { id: 'jio', name: 'Jio', logoColor: '#0F3CC9', code: 'RJIO' },
+      { id: 'vi', name: 'Vi', logoColor: '#FF0000', code: 'VILN' },
+      { id: 'bsnl', name: 'BSNL', logoColor: '#0054A6', code: 'BSNL' },
+      { id: 'act', name: 'ACT', logoColor: '#ED1C24', code: 'ACTF' },
+      { id: 'hathway', name: 'Hathway', logoColor: '#0085C7', code: 'HTWY' }
+    ];
+
+    const MOCK_USERS = [
+      {
+        id: 'usr-admin',
+        email: 'admin@teleresolve.ai',
+        name: 'Sarah Jenkins',
+        role: 'Admin',
+        company: 'global',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120'
+      },
+      {
+        id: 'usr-airtel-sup',
+        email: 'supervisor@airtel.com',
+        name: 'Rajesh Kumar',
+        role: 'Supervisor',
+        company: 'airtel',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120'
+      },
+      {
+        id: 'usr-jio-agt',
+        email: 'agent.rahul@jio.com',
+        name: 'Rahul Sharma',
+        role: 'Agent',
+        company: 'jio',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120'
+      }
+    ];
+
+    const MOCK_CUSTOMERS = [
+      {
+        id: 'CUST-9021',
+        name: 'Amit Sharma',
+        phone: '+91 98765 43210',
+        operator: 'jio',
+        email: 'amit.sharma@example.com',
+        location: 'Mumbai, Maharashtra',
+        plan: 'JioFiber 150Mbps Unlimited',
+        rechargeHistory: [
+          { date: '2026-07-01', amount: '₹999', plan: 'Fiber Premium', status: 'Success' },
+          { date: '2026-06-01', amount: '₹999', plan: 'Fiber Premium', status: 'Success' }
+        ],
+        complaintHistory: [
+          { id: 'TR-TKT-101', issue: 'Fiber router red light flashing', status: 'Resolved', date: '2026-05-12' }
+        ],
+        csatScore: 88,
+        joinedDate: '2025-01-10'
+      },
+      {
+        id: 'CUST-9022',
+        name: 'Anjali Rao',
+        phone: '+91 98123 45678',
+        operator: 'airtel',
+        email: 'anjali.rao@example.com',
+        location: 'Bengaluru, Karnataka',
+        plan: 'Airtel Black ₹1099 Plan',
+        rechargeHistory: [
+          { date: '2026-07-05', amount: '₹1099', plan: 'Airtel Black', status: 'Success' }
+        ],
+        complaintHistory: [],
+        csatScore: 94,
+        joinedDate: '2025-03-15'
+      },
+      {
+        id: 'CUST-9023',
+        name: 'Vikram Singh',
+        phone: '+91 99112 23344',
+        operator: 'vi',
+        email: 'vikram.singh@example.com',
+        location: 'Delhi NCR',
+        plan: 'Vi Hero Unlimited 499',
+        rechargeHistory: [
+          { date: '2026-07-10', amount: '₹499', plan: 'Hero Unlimited', status: 'Success' }
+        ],
+        complaintHistory: [
+          { id: 'TR-TKT-104', issue: 'Zero network signal in office basement', status: 'Open', date: '2026-07-19' }
+        ],
+        csatScore: 42,
+        joinedDate: '2025-06-01'
+      }
+    ];
+
+    const MOCK_CALLS = [
+      {
+        id: 'TR-CALL-101',
+        customer: 'Amit Sharma',
+        customerId: 'CUST-9021',
+        operator: 'jio',
+        phone: '+91 98765 43210',
+        location: 'Mumbai, Maharashtra',
+        agent: 'Rahul Sharma',
+        duration: '05:42',
+        status: 'Active',
+        language: 'English & Hindi',
+        priority: 'Critical',
+        sentiment: 'Frustrated',
+        intent: 'Network Outage / Slow Internet',
+        score: 0.85,
+        entities: {
+          plan: 'JioFiber 150Mbps',
+          rechargeAmount: '₹999',
+          device: 'Jio Home Gateway (JCO110)',
+          area: 'Mumbai Western Suburbs'
+        },
+        summary: 'Customer reports that since yesterday evening, the fiber router shows a red light blinking. Internet is completely down. Has tried restarting the router multiple times but the issue persists. Customer is highly frustrated due to working from home.',
+        transcript: [
+          { speaker: 'Agent', text: 'Thank you for calling customer care. My name is Rahul. How can I help you today?' },
+          { speaker: 'Customer', text: 'Yes, hi Rahul. My JioFiber is completely down since yesterday evening. The router is just flashing a red light and nothing is working!' },
+          { speaker: 'Agent', text: 'I understand your frustration, sir. Let me check if there is an outage in your area. Can you confirm your registered number?' },
+          { speaker: 'Customer', text: 'It is the same number, 9876543210. Please fix it quickly, I am working from home!' },
+          { speaker: 'Agent', text: 'Thank you. I have checked the system. There is indeed a localized fiber cut in your area. It should be resolved within 3 hours.' },
+          { speaker: 'Customer', text: '3 hours? This is unacceptable. Can I get some refund or data credit for this outage?' },
+          { speaker: 'Agent', text: 'I completely agree, sir. I will raise a billing waiver ticket so that you will be credited once it is back online.' }
+        ],
+        suggestedResolution: 'Create technical support dispatch ticket and apply ₹150 outage billing compensation credit.'
+      },
+      {
+        id: 'TR-CALL-102',
+        customer: 'Anjali Rao',
+        customerId: 'CUST-9022',
+        operator: 'airtel',
+        phone: '+91 98123 45678',
+        location: 'Bengaluru, Karnataka',
+        agent: 'Samantha Lee',
+        duration: '03:15',
+        status: 'Active',
+        language: 'English',
+        priority: 'Medium',
+        sentiment: 'Neutral',
+        intent: 'International Roaming Activation',
+        score: 0.92,
+        entities: {
+          plan: 'Airtel Black postpaid',
+          destination: 'London, UK',
+          durationNeeded: '10 days'
+        },
+        summary: 'Customer wants to activate the international roaming pack for their upcoming travel to London, UK next week. Confirmed the pricing of the ₹3999 pack.',
+        transcript: [
+          { speaker: 'Agent', text: 'Hello, welcome to Airtel Care. How may I assist you?' },
+          { speaker: 'Customer', text: 'Hi, I am traveling to London next Tuesday. I want to activate an international roaming plan.' },
+          { speaker: 'Agent', text: 'Sure. We have a special UK pack for ₹3999 which covers 10 days of unlimited incoming and 5GB data.' },
+          { speaker: 'Customer', text: 'Please queue it starting Tuesday morning 6:00 AM.' }
+        ],
+        suggestedResolution: 'Schedule Postpaid International Roaming Pack (ID: IR-3999) activation for departure date.'
+      }
+    ];
+
+    const MOCK_TICKETS = [
+      {
+        id: 'TR-TKT-101',
+        issue: 'Fiber router red light flashing',
+        customer: 'Amit Sharma',
+        operator: 'jio',
+        agent: 'Rahul Sharma',
+        priority: 'High',
+        status: 'In Progress',
+        category: 'Hardware',
+        createdDate: '2026-07-20',
+        resolutionTime: '--'
+      },
+      {
+        id: 'TR-TKT-102',
+        issue: 'Bill paid but account suspended',
+        customer: 'Vikram Singh',
+        operator: 'vi',
+        agent: 'Priya Patel',
+        priority: 'Critical',
+        status: 'Resolved',
+        category: 'Billing',
+        createdDate: '2026-07-18',
+        resolutionTime: '1.2 Hours'
+      }
+    ];
+
+    const MOCK_KB = [
+      {
+        id: 'KB-SOP-001',
+        title: 'Router Red Light Troubleshooting SOP',
+        category: 'Hardware',
+        content: 'Standard operating procedure for handling red light alerts on Fiber Gateways.',
+        steps: [
+          'Check physical fiber patch cable connections at the wall outlet.',
+          'Verify optical signal levels in GPON terminal (-15dBm to -25dBm).',
+          'If optical power is below -27dBm, dispatch field splicing technician.'
+        ],
+        recommendedAnswers: 'Check fiber patch cords first. If optical levels are weak, schedule field tech splicing dispatch.'
+      },
+      {
+        id: 'KB-SOP-002',
+        title: 'Duplicate Recharge & UPI Refund Policy',
+        category: 'Billing',
+        content: 'Standard workflows for duplicate recharging and payment disputes.',
+        steps: [
+          'Verify double transactions on system billing portal ledger.',
+          'Advise customer on queue validity or process UPI gateway chargeback (3 days).'
+        ],
+        recommendedAnswers: 'If the customer demands a refund, initiate UPI chargeback. Credit takes 3 to 5 banking days.'
+      }
+    ];
+
+    const MOCK_AUDIT_LOGS = [
+      { time: '2026-07-20 10:02:14', user: 'Rahul Sharma', action: 'Call Answered (TR-CALL-101)', company: 'jio', ip: '192.168.1.100' },
+      { time: '2026-07-20 09:48:32', user: 'Sarah Jenkins', action: 'Global AI Settings Updated', company: 'global', ip: '10.0.0.1' }
+    ];
+
+    // =========================================================================
+    // APP CONTEXT & PROVIDER
+    // =========================================================================
+    const AppContext = createContext();
+
+    function AppProvider({ children }) {
+      const [currentUser, setCurrentUser] = useState(null);
+      const [currentTenant, setCurrentTenant] = useState('global');
+      const [currentPage, setCurrentPage] = useState('login');
+      const [params, setParams] = useState({});
+      const [darkMode, setDarkMode] = useState(false);
+
+      const [calls, setCalls] = useState(MOCK_CALLS);
+      const [tickets, setTickets] = useState(MOCK_TICKETS);
+      const [customers, setCustomers] = useState(MOCK_CUSTOMERS);
+      const [kbArticles] = useState(MOCK_KB);
+      const [auditLogs, setAuditLogs] = useState(MOCK_AUDIT_LOGS);
+      const [notifications, setNotifications] = useState([
+        { id: 1, message: 'Mumbai West: Jio Fiber Cut detected', read: false }
+      ]);
+      const [aiSettings, setAiSettings] = useState({
+        autoTranscription: true,
+        sentimentSensitivity: 75,
+        autoTicketGeneration: false,
+        confidenceThreshold: 80,
+        modelSelected: 'Gemini 1.5 Pro'
+      });
+
+      const login = (email, password, isAdmin, selectedCompany) => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            const foundUser = MOCK_USERS.find(
+              (u) => u.email.toLowerCase() === email.toLowerCase() &&
+                     (isAdmin ? u.role === 'Admin' : u.role !== 'Admin')
+            );
+            if (!foundUser) {
+              reject(new Error('User not found. Use admin@teleresolve.ai or agent.rahul@jio.com'));
+              return;
+            }
+            if (password !== 'password' && password !== foundUser.role.toLowerCase()) {
+              reject(new Error('Incorrect password. Use password or role name in lowercase (e.g. "admin", "agent").'));
+              return;
+            }
+            setCurrentUser(foundUser);
+            const tenant = isAdmin ? 'global' : selectedCompany;
+            setCurrentTenant(tenant);
+            addAuditLog(`Logged in as ${foundUser.role}`, tenant, foundUser.name);
+            setCurrentPage('dashboard');
+            resolve(foundUser);
+          }, 800);
+        });
+      };
+
+      const logout = () => {
+        addAuditLog('Logged out', currentTenant, currentUser?.name);
+        setCurrentUser(null);
+        setCurrentTenant('global');
+        setCurrentPage('login');
+      };
+
+      const addTicket = (tkt) => {
+        const newTkt = {
+          id: `TR-TKT-${100 + tickets.length + 1}`,
+          createdDate: new Date().toISOString().split('T')[0],
+          resolutionTime: '--',
+          ...tkt
+        };
+        setTickets(prev => [newTkt, ...prev]);
+        addAuditLog(`Created ticket ${newTkt.id}`, newTkt.operator, currentUser?.name || 'System');
+        return newTkt;
+      };
+
+      const updateTicketStatus = (tktId, status) => {
+        setTickets(prev => prev.map(t => t.id === tktId ? { ...t, status } : t));
+        addAuditLog(`Updated ticket ${tktId} status to: ${status}`, currentTenant, currentUser?.name);
+      };
+
+      const addAuditLog = (action, company, user) => {
+        const log = {
+          time: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          user: user || currentUser?.name || 'System',
+          action,
+          company: company || 'global',
+          ip: '192.168.1.52'
+        };
+        setAuditLogs(prev => [log, ...prev]);
+      };
+
+      const navigateTo = (page, routeParams = {}) => {
+        setCurrentPage(page);
+        setParams(routeParams);
+      };
+
+      return (
+        <AppContext.Provider value={{
+          currentUser, currentTenant, currentPage, params, darkMode, calls, tickets, customers, kbArticles, auditLogs, notifications, aiSettings,
+          login, logout, addTicket, updateTicketStatus, addAuditLog, navigateTo, setDarkMode, setAiSettings, setCurrentTenant
+        }}>
+          {children}
+        </AppContext.Provider>
+      );
+    }
+
+    const useApp = () => useContext(AppContext);
+
+    // =========================================================================
+    // COMPONENTS & LAYOUT
+    // =========================================================================
+    function Sidebar() {
+      const { currentUser, currentPage, navigateTo, logout } = useApp();
+      if (!currentUser) return null;
+
+      const menu = [
+        { name: 'Dashboard', page: 'dashboard', icon: 'dashboard' },
+        { name: 'Live Calls', page: 'live-calls', icon: 'ring_volume' },
+        { name: 'Customers', page: 'customers', icon: 'people' },
+        { name: 'Tickets', page: 'tickets', icon: 'receipt' },
+        { name: 'AI Assistant', page: 'ai-analyzer', icon: 'smart_toy' },
+        { name: 'Knowledge Base', page: 'knowledge-base', icon: 'menu_book' },
+        { name: 'Analytics', page: 'analytics', icon: 'bar_chart' },
+        { name: 'Reports', page: 'reports', icon: 'assessment' },
+        { name: 'Settings', page: 'settings', icon: 'settings' }
+      ];
+
+      if (currentUser.role === 'Admin') {
+        menu.push({ name: 'Admin Panel', page: 'admin', icon: 'security' });
+      }
+
+      return (
+        <Box sx={{ width: 240, bgcolor: '#1E3A5F', color: 'white', display: 'flex', flexDirection: 'column', minHeight: '100vh', flexShrink: 0 }}>
+          <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Icon style={{ color: '#0F766E' }}>smart_toy</Icon>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>TeleResolve <span style={{ color: '#0F766E' }}>AI</span></Typography>
+          </Box>
+          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+          <Box sx={{ flexGrow: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {menu.map((m) => (
+              <Button
+                key={m.name}
+                fullWidth
+                onClick={() => navigateTo(m.page)}
+                sx={{
+                  justifyContent: 'flex-start',
+                  color: currentPage === m.page ? 'white' : '#94A3B8',
+                  bgcolor: currentPage === m.page ? '#0F766E' : 'transparent',
+                  textTransform: 'none',
+                  px: 2,
+                  py: 1.25,
+                  borderRadius: '6px',
+                  gap: 1.5,
+                  '&:hover': { bgcolor: currentPage === m.page ? '#0F766E' : 'rgba(255,255,255,0.05)' }
+                }}
+              >
+                <Icon>{m.icon}</Icon>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>{m.name}</Typography>
+              </Button>
+            ))}
+          </Box>
+          <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <Box display="flex" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+              <Avatar src={currentUser.avatar} sx={{ width: 34, height: 34 }} />
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>{currentUser.name}</Typography>
+                <Typography variant="caption" sx={{ color: '#94A3B8' }}>{currentUser.role}</Typography>
+              </Box>
+            </Box>
+            <Button
+              fullWidth
+              onClick={logout}
+              startIcon={<Icon>logout</Icon>}
+              sx={{ color: '#EF4444', justifyContent: 'flex-start', textTransform: 'none' }}
+            >
+              Logout
+            </Button>
+          </Box>
+        </Box>
+      );
+    }
+
+    function Navbar() {
+      const { currentUser, currentTenant, setCurrentTenant, darkMode, setDarkMode, notifications } = useApp();
+      const [anchor, setAnchor] = useState(null);
+
+      if (!currentUser) return null;
+
+      const tenantDetails = currentTenant === 'global' ? { name: 'Global Admin Console', logoColor: '#0F766E' } : MOCK_COMPANIES.find(c => c.id === currentTenant);
+
+      return (
+        <Box sx={{ height: 70, bgcolor: 'white', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: '#F1F5F9', px: 1.5, py: 0.75, borderRadius: '8px', width: 280 }}>
+            <Icon style={{ color: '#64748B', marginRight: 8 }}>search</Icon>
+            <input placeholder="Search calls, tickets..." style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.85rem' }} />
+          </Box>
+          <Box display="flex" alignItems="center" gap={2}>
+            {/* Tenant selector */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <Icon style={{ color: tenantDetails?.logoColor || '#1E3A5F' }}>public</Icon>
+              <Select
+                value={currentTenant}
+                onChange={(e) => setCurrentTenant(e.target.value)}
+                disabled={currentUser.role !== 'Admin'}
+                size="small"
+                sx={{
+                  fontFamily: 'Inter',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  bgcolor: '#F8FAFC',
+                  borderRadius: '8px',
+                  '.MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
+              >
+                {currentUser.role === 'Admin' ? (
+                  [
+                    <MenuItem key="global" value="global">Global Admin Console</MenuItem>,
+                    ...MOCK_COMPANIES.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)
+                  ]
+                ) : (
+                  <MenuItem value={currentUser.company}>{tenantDetails?.name}</MenuItem>
+                )}
+              </Select>
+            </Box>
+
+            <IconButton onClick={() => setDarkMode(!darkMode)}>
+              <Icon>{darkMode ? 'light_mode' : 'dark_mode'}</Icon>
+            </IconButton>
+
+            <IconButton onClick={(e) => setAnchor(e.currentTarget)}>
+              <Icon>notifications</Icon>
+            </IconButton>
+            <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)} PaperProps={{ sx: { width: 260 } }}>
+              <Box p={1.5}><Typography variant="subtitle2">System Notifications</Typography></Box>
+              <Divider />
+              {notifications.map(n => (
+                <MenuItem key={n.id} onClick={() => setAnchor(null)}>
+                  <Typography variant="body2" sx={{ whiteSpace: 'normal' }}>{n.message}</Typography>
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+        </Box>
+      );
+    }
+
+    // =========================================================================
+    // PAGES
+    // =========================================================================
+    
+    // LOGIN PAGE
+    function LoginPage() {
+      const { login } = useApp();
+      const [tab, setTab] = useState(1);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [company, setCompany] = useState('jio');
+      const [error, setError] = useState(null);
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+          await login(email, password, tab === 0, company);
+        } catch (err) {
+          setError(err.message);
+          setLoading(false);
+        }
+      };
+
+      return (
+        <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: { xs: 'column', md: 'row' } }}>
+          <Box sx={{ flex: 1.1, bgcolor: '#1E3A5F', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', p: 6, textAlign: 'center' }}>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>TeleResolve AI</Typography>
+            <Typography variant="body1" sx={{ color: '#E2E8F0', maxWidth: 400 }}>
+              "Empowering Telecom Customer Support with AI-Driven Intelligence"
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 0.9, display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4, bgcolor: '#F8FAFC' }}>
+            <Card sx={{ p: 4.5, width: '100%', maxWidth: 440, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1E3A5F', mb: 1 }}>Welcome Back</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3.5 }}>Sign in to continue to the console.</Typography>
+
+              <Tabs value={tab} onChange={(e, val) => setTab(val)} variant="fullWidth" sx={{ mb: 3.5, bgcolor: '#F1F5F9', borderRadius: '8px', p: 0.5 }}>
+                <Tab label="Admin Login" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                <Tab label="User Login" sx={{ textTransform: 'none', fontWeight: 600 }} />
+              </Tabs>
+
+              {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+              <form onSubmit={handleSubmit}>
+                <Box display="flex" flexDirection="column" gap={3}>
+                  <TextField
+                    label={tab === 0 ? 'Admin ID or Email' : 'Employee ID or Email'}
+                    placeholder={tab === 0 ? 'admin@teleresolve.ai' : 'agent.rahul@jio.com'}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    fullWidth
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                  <TextField
+                    label="Password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    fullWidth
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                  {tab === 1 && (
+                    <FormControl fullWidth>
+                      <InputLabel>Telecom Operator</InputLabel>
+                      <Select value={company} onChange={(e) => setCompany(e.target.value)} label="Telecom Operator" sx={{ borderRadius: '8px' }}>
+                        {MOCK_COMPANIES.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  )}
+                  <Button type="submit" variant="contained" disabled={loading} sx={{ bgcolor: '#1E3A5F', py: 1.5, borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}>
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Login to Console'}
+                  </Button>
+                </Box>
+              </form>
+            </Card>
+          </Box>
+        </Box>
+      );
+    }
+
+    // DASHBOARD PAGE
+    function DashboardPage() {
+      const { calls, tickets, currentTenant } = useApp();
+
+      const filteredTickets = currentTenant === 'global' ? tickets : tickets.filter(t => t.operator === currentTenant);
+      
+      const kpis = [
+        { title: "Today's Calls", value: 34, icon: 'phone', color: '#1E3A5F' },
+        { title: "Active Monitor", value: calls.filter(c => c.status === 'Active').length, icon: 'ring_volume', color: '#0F766E' },
+        { title: "Resolved Tickets", value: filteredTickets.filter(t => t.status === 'Resolved').length, icon: 'check_circle', color: '#22C55E' },
+        { title: "Escalated", value: filteredTickets.filter(t => t.status === 'Escalated').length, icon: 'warning', color: '#EF4444' }
+      ];
+
+      const callsData = [
+        { name: '09:00', Airtel: 10, Jio: 20 },
+        { name: '10:00', Airtel: 15, Jio: 35 },
+        { name: '11:00', Airtel: 22, Jio: 45 },
+        { name: '12:00', Airtel: 28, Jio: 30 }
+      ];
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Enterprise Dashboard</Typography>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {kpis.map((k, idx) => (
+              <Grid item xs={12} sm={6} md={3} key={idx}>
+                <Card sx={{ p: 2.5, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>{k.value}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{k.title}</Typography>
+                  </Box>
+                  <Icon style={{ color: k.color, fontSize: 32 }}>{k.icon}</Icon>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>Call Volume Hourly Index</Typography>
+                <Box height={280}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={callsData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" stroke="#64748B" fontSize={11} />
+                      <YAxis stroke="#64748B" fontSize={11} />
+                      <Tooltip />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="Jio" stroke="#0F3CC9" strokeWidth={2} />
+                      <Line type="monotone" dataKey="Airtel" stroke="#E31837" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none', height: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>Operations Alert Logs</Typography>
+                <List size="small">
+                  <ListItem><ListItemText primary="Mumbai West Fiber Cut Alert" secondary="ETA 1.5 Hrs" /></ListItem>
+                  <ListItem><ListItemText primary="Jio Gateway API latency degraded" secondary="ETA 30 Mins" /></ListItem>
+                </List>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // LIVE CALLS LIST
+    function LiveCallsPage() {
+      const { calls, currentTenant, navigateTo } = useApp();
+      const tenantCalls = currentTenant === 'global' ? calls : calls.filter(c => c.operator === currentTenant);
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Live Support Monitoring</Typography>
+          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+            <Table>
+              <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Call ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Subscriber Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Operator</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Duration</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Sentiment</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tenantCalls.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell sx={{ fontWeight: 600 }}>{c.id}</TableCell>
+                    <TableCell>{c.customer}</TableCell>
+                    <TableCell sx={{ textTransform: 'uppercase', fontWeight: 600 }}>{c.operator}</TableCell>
+                    <TableCell>{c.duration}</TableCell>
+                    <TableCell>
+                      <Chip label={c.sentiment} size="small" sx={{ bgcolor: c.sentiment === 'Frustrated' ? '#EF444415' : '#22C55E15', color: c.sentiment === 'Frustrated' ? '#EF4444' : '#22C55E', fontWeight: 600 }} />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="contained" size="small" sx={{ bgcolor: '#1E3A5F', textTransform: 'none' }} onClick={() => navigateTo('call-details', { id: c.id })}>
+                        Monitor Console
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      );
+    }
+
+    // CALL DETAILS PAGE
+    function CallDetailsPage() {
+      const { params, calls, addTicket, navigateTo } = useApp();
+      const call = calls.find(c => c.id === params.id);
+      const [ticketDone, setTicketDone] = useState(false);
+
+      if (!call) return <Box p={4}><Typography color="error">Call record not resolved.</Typography></Box>;
+
+      const triggerTicket = () => {
+        addTicket({
+          issue: call.intent,
+          customer: call.customer,
+          operator: call.operator,
+          agent: call.agent,
+          priority: call.priority,
+          status: 'Open',
+          category: 'Network'
+        });
+        setTicketDone(true);
+      };
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Button startIcon={<Icon>arrow_back</Icon>} sx={{ mb: 2, textTransform: 'none' }} onClick={() => navigateTo('live-calls')}>Back</Button>
+          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>Call Monitor Details: {call.id}</Typography>
+            <Button variant="contained" disabled={ticketDone} onClick={triggerTicket} sx={{ bgcolor: '#0F766E' }}>
+              {ticketDone ? 'Ticket Created' : 'Create CRM Ticket'}
+            </Button>
+          </Box>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={7}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>Voice Recording Dialogues</Typography>
+                <Box display="flex" flexDirection="column" gap={2} sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                  {call.transcript.map((line, idx) => (
+                    <Box key={idx} sx={{ alignSelf: line.speaker === 'Customer' ? 'flex-start' : 'flex-end', maxWidth: '75%', bgcolor: line.speaker === 'Customer' ? '#F1F5F9' : 'rgba(15,118,110,0.06)', p: 1.5, borderRadius: '8px' }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>{line.speaker}</Typography>
+                      <Typography variant="body2">{line.text}</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>AI Assistant Insights</Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}><strong>Summary:</strong> {call.summary}</Typography>
+                <Divider sx={{ my: 1.5 }} />
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Extracted Intent:</strong> {call.intent}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Device Model:</strong> {call.entities.device}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Zone:</strong> {call.entities.area}</Typography>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // AI QUERY ANALYZER
+    function AIAnalyzerPage() {
+      const { addTicket } = useApp();
+      const [text, setText] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [aiData, setAiData] = useState(null);
+      const [ticketId, setTicketId] = useState('');
+
+      const runAI = () => {
+        setLoading(true);
+        setAiData(null);
+        setTicketId('');
+        setTimeout(() => {
+          setAiData({
+            intent: "Broadband Optical Splicing Fault",
+            emotion: "Frustrated",
+            category: "Network Outage",
+            device: "JioHome router Gateway (HW-901)",
+            area: "Mumbai Western Suburbs",
+            resolution: "Assign physical line team to Lokhandwala construction site."
+          });
+          setLoading(false);
+        }, 1000);
+      };
+
+      const pushTicket = () => {
+        const t = addTicket({
+          issue: aiData.intent,
+          customer: "AI Analytical Parse",
+          operator: "jio",
+          agent: "AI Automation Core",
+          priority: "High",
+          status: "Open",
+          category: "Network"
+        });
+        setTicketId(t.id);
+      };
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>AI Script Analyzer</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>Paste Script Details</Typography>
+                <TextField
+                  multiline
+                  rows={8}
+                  fullWidth
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Paste customer chat transcripts here to extract intents..."
+                  sx={{ mb: 2 }}
+                />
+                <Button variant="contained" disabled={loading || !text.trim()} onClick={runAI} sx={{ bgcolor: '#1E3A5F' }}>
+                  {loading ? 'AI Parsing...' : 'Run Natural Language Triage'}
+                </Button>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              {aiData && (
+                <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, color: '#0F766E' }}>AI Insights Extracted</Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}><strong>Intent:</strong> {aiData.intent}</Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}><strong>Emotion:</strong> {aiData.emotion}</Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}><strong>Device:</strong> {aiData.device}</Typography>
+                  <Typography variant="body2" sx={{ mb: 1.5 }}><strong>Area:</strong> {aiData.area}</Typography>
+                  <Box sx={{ bgcolor: 'rgba(15,118,110,0.05)', p: 1.5, borderRadius: '8px', mb: 2 }}>
+                    <Typography variant="body2" sx={{ color: '#0F766E' }}><strong>Recommended playbook:</strong> {aiData.resolution}</Typography>
+                  </Box>
+                  <Button variant="contained" disabled={!!ticketId} onClick={pushTicket} sx={{ bgcolor: '#0F766E' }}>
+                    {ticketId ? `Ticket Logged: ${ticketId}` : 'Generate CRM Ticket'}
+                  </Button>
+                </Card>
+              )}
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // TICKETS PAGE
+    function TicketsPage() {
+      const { tickets, currentTenant, updateTicketStatus } = useApp();
+      const tenantTickets = currentTenant === 'global' ? tickets : tickets.filter(t => t.operator === currentTenant);
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Support Tickets Ledger</Typography>
+          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+            <Table>
+              <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Ticket ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Issue</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Operator</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Priority</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tenantTickets.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell sx={{ fontWeight: 600 }}>{t.id}</TableCell>
+                    <TableCell>{t.issue}</TableCell>
+                    <TableCell>{t.customer}</TableCell>
+                    <TableCell sx={{ textTransform: 'uppercase', fontWeight: 600 }}>{t.operator}</TableCell>
+                    <TableCell>{t.priority}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={t.status}
+                        onChange={(e) => updateTicketStatus(t.id, e.target.value)}
+                        size="small"
+                        sx={{ fontSize: '0.8rem', height: 28, borderRadius: '6px' }}
+                      >
+                        <MenuItem value="Open">Open</MenuItem>
+                        <MenuItem value="In Progress">In Progress</MenuItem>
+                        <MenuItem value="Resolved">Resolved</MenuItem>
+                        <MenuItem value="Escalated">Escalated</MenuItem>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      );
+    }
+
+    // CUSTOMERS PAGE
+    function CustomersPage() {
+      const { customers, currentTenant, navigateTo } = useApp();
+      const list = currentTenant === 'global' ? customers : customers.filter(c => c.operator === currentTenant);
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Subscriber Directory</Typography>
+          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+            <Table>
+              <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Customer ID</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Mobile Number</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Operator</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {list.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell sx={{ fontWeight: 600 }}>{c.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>{c.name}</TableCell>
+                    <TableCell>{c.phone}</TableCell>
+                    <TableCell sx={{ textTransform: 'uppercase', fontWeight: 600 }}>{c.operator}</TableCell>
+                    <TableCell>{c.plan}</TableCell>
+                    <TableCell>
+                      <Button variant="outlined" size="small" onClick={() => navigateTo('customer-profile', { id: c.id })}>
+                        Profile Timeline
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      );
+    }
+
+    // CUSTOMER PROFILE
+    function CustomerProfilePage() {
+      const { params, customers, navigateTo } = useApp();
+      const customer = customers.find(c => c.id === params.id);
+
+      if (!customer) return <Box p={4}><Typography color="error">Subscriber not found.</Typography></Box>;
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Button startIcon={<Icon>arrow_back</Icon>} sx={{ mb: 2, textTransform: 'none' }} onClick={() => navigateTo('customers')}>Back</Button>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Customer Profile: {customer.name}</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={5}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>Subscriber Details</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Email:</strong> {customer.email}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Phone:</strong> {customer.phone}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Active Plan:</strong> {customer.plan}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}><strong>Joined Date:</strong> {customer.joinedDate}</Typography>
+                <Typography variant="body2"><strong>CSAT index:</strong> {customer.csatScore}%</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={7}>
+              <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>Billing history</Typography>
+                <TableContainer component={Paper} elevation={0}>
+                  <Table size="small">
+                    <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                      <TableRow>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Amount</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {customer.rechargeHistory.map((h, i) => (
+                        <TableRow key={i}>
+                          <TableCell>{h.date}</TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>{h.amount}</TableCell>
+                          <TableCell>{h.status}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // KNOWLEDGE BASE
+    function KnowledgeBasePage() {
+      const { kbArticles } = useApp();
+      const [search, setSearch] = useState('');
+      const [selected, setSelected] = useState(kbArticles[0]);
+
+      const filtered = kbArticles.filter(art =>
+        art.title.toLowerCase().includes(search.toLowerCase()) ||
+        art.content.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Knowledge SOP Hub</Typography>
+          <TextField
+            placeholder="Search playbook articles..."
+            fullWidth
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+          />
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Card sx={{ border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: 'none' }}>
+                <List disablePadding>
+                  {filtered.map(art => (
+                    <ListItem key={art.id} button onClick={() => setSelected(art)} selected={selected.id === art.id} sx={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <ListItemText primary={art.title} secondary={art.id} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={8}>
+              {selected && (
+                <Card sx={{ p: 3, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: 'none' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{selected.title}</Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>Category: {selected.category}</Typography>
+                  <Typography variant="body2" sx={{ mb: 3, color: '#475569' }}>{selected.content}</Typography>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>Resolution Steps</Typography>
+                  <List size="small">
+                    {selected.steps.map((st, i) => (
+                      <ListItem key={i}><ListItemText primary={`${i+1}. ${st}`} /></ListItem>
+                    ))}
+                  </List>
+                  <Box sx={{ bgcolor: 'rgba(15,118,110,0.05)', p: 2, borderRadius: '8px', mt: 2 }}>
+                    <Typography variant="body2" sx={{ color: '#0F766E', fontStyle: 'italic' }}>
+                      <strong>AI Response Script:</strong> "{selected.recommendedAnswers}"
+                    </Typography>
+                  </Box>
+                </Card>
+              )}
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // ANALYTICS PAGE
+    function AnalyticsPage() {
+      const data = [
+        { month: 'Jan', SLA: 98.2 },
+        { month: 'Feb', SLA: 97.8 },
+        { month: 'Mar', SLA: 98.5 },
+        { month: 'Apr', SLA: 99.1 }
+      ];
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Operations Analytics</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: 3, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: 'none' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>SLA Compliance Index</Typography>
+                <Box height={280}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="month" stroke="#64748B" fontSize={11} />
+                      <YAxis domain={[95, 100]} stroke="#64748B" fontSize={11} />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="SLA" stroke="#0F766E" fill="rgba(15,118,110,0.1)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: 3, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: 'none', height: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>Circle Outage Alarms</Typography>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                      <TableRow>
+                        <TableCell>Zone</TableCell>
+                        <TableCell>Severity</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>Mumbai West Splicing</TableCell>
+                        <TableCell><Chip label="Critical" size="small" color="error" /></TableCell>
+                        <TableCell>Active</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>Bangalore Hub</TableCell>
+                        <TableCell><Chip label="Medium" size="small" color="warning" /></TableCell>
+                        <TableCell>Scheduled</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // REPORTS PAGE
+    function ReportsPage() {
+      const { tickets, currentTenant } = useApp();
+      const [exporting, setExporting] = useState(false);
+
+      const downloadCSV = () => {
+        setExporting(true);
+        setTimeout(() => {
+          const list = currentTenant === 'global' ? tickets : tickets.filter(t => t.operator === currentTenant);
+          let csv = "data:text/csv;charset=utf-8,ID,Issue,Customer,Status,Priority\n";
+          list.forEach(t => {
+            csv += `"${t.id}","${t.issue}","${t.customer}","${t.status}","${t.priority}"\n`;
+          });
+          const encoded = encodeURI(csv);
+          const link = document.createElement("a");
+          link.setAttribute("href", encoded);
+          link.setAttribute("download", `teleresolve_tickets_${currentTenant}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setExporting(false);
+        }, 1000);
+      };
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Operations Report Center</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: 4, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 3 }}>Export Filters</Typography>
+                <Box display="flex" flexDirection="column" gap={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Dataset</InputLabel>
+                    <Select value="tickets" label="Dataset" sx={{ borderRadius: '8px' }}>
+                      <MenuItem value="tickets">Support Tickets Ledger</MenuItem>
+                      <MenuItem value="calls">Voice Call Logs</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button variant="contained" disabled={exporting} onClick={downloadCSV} sx={{ bgcolor: '#1E3A5F', py: 1.25, fontWeight: 600 }}>
+                    {exporting ? 'Compiling CSV File...' : 'Generate & Download CSV Report'}
+                  </Button>
+                </Box>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // SETTINGS PAGE
+    function SettingsPage() {
+      const { currentUser } = useApp();
+      if (!currentUser) return null;
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>User Profile Settings</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: 3, border: '1px solid #E2E8F0', borderRadius: '8px', boxShadow: 'none' }}>
+                <Box display="flex" alignItems="center" gap={2} sx={{ mb: 3 }}>
+                  <Avatar src={currentUser.avatar} sx={{ width: 54, height: 54 }} />
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{currentUser.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">{currentUser.role} Clearances</Typography>
+                  </Box>
+                </Box>
+                <TextField label="Full Name" value={currentUser.name} disabled fullWidth sx={{ mb: 2 }} />
+                <TextField label="Email ID" value={currentUser.email} disabled fullWidth sx={{ mb: 2 }} />
+                <TextField label="Carrier Scope" value={currentUser.company.toUpperCase()} disabled fullWidth />
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      );
+    }
+
+    // ADMIN PANEL
+    function AdminPanelPage() {
+      const { auditLogs, aiSettings, setAiSettings } = useApp();
+      const [tab, setTab] = useState(0);
+
+      return (
+        <Box sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Global Security & AI Controls</Typography>
+          <Tabs value={tab} onChange={(e, val) => setTab(val)} sx={{ mb: 3, borderBottom: '1px solid #E2E8F0' }}>
+            <Tab label="AI Threshold Settings" />
+            <Tab label="Security Compliance Audits" />
+          </Tabs>
+
+          {tab === 0 && (
+            <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+              <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700 }}>AI Orchestration Parameters</Typography>
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                  <Box display="flex" flexDirection="column" gap={3}>
+                    <Box>
+                      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>Confidence Threshold: {aiSettings.confidenceThreshold}%</Typography>
+                      <Slider value={aiSettings.confidenceThreshold} onChange={(e, val) => setAiSettings({ ...aiSettings, confidenceThreshold: val })} />
+                    </Box>
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Automatic Transcribe Trigger</Typography>
+                        <Switch checked={aiSettings.autoTranscription} onChange={(e) => setAiSettings({ ...aiSettings, autoTranscription: e.target.checked })} />
+                      </Box>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Card>
+          )}
+
+          {tab === 1 && (
+            <Card sx={{ p: 3, borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: 'none' }}>
+              <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>Active Audit Streams</Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead sx={{ bgcolor: '#F8FAFC' }}>
+                    <TableRow>
+                      <TableCell>Timestamp</TableCell>
+                      <TableCell>User</TableCell>
+                      <TableCell>Action</TableCell>
+                      <TableCell>Company</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {auditLogs.map((l, i) => (
+                      <TableRow key={i}>
+                        <TableCell sx={{ fontFamily: 'monospace' }}>{l.time}</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{l.user}</TableCell>
+                        <TableCell>{l.action}</TableCell>
+                        <TableCell sx={{ textTransform: 'uppercase' }}>{l.company}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          )}
+        </Box>
+      );
+    }
+
+    // =========================================================================
+    // MAIN APP WRAPPER & ROUTER
+    // =========================================================================
+    function AppContent() {
+      const { currentPage, currentUser, darkMode } = useApp();
+
+      if (currentPage === 'login' || !currentUser) {
+        return <LoginPage />;
+      }
+
+      const renderPage = () => {
+        switch (currentPage) {
+          case 'dashboard': return <DashboardPage />;
+          case 'live-calls': return <LiveCallsPage />;
+          case 'call-details': return <CallDetailsPage />;
+          case 'ai-analyzer': return <AIAnalyzerPage />;
+          case 'tickets': return <TicketsPage />;
+          case 'customers': return <CustomersPage />;
+          case 'customer-profile': return <CustomerProfilePage />;
+          case 'knowledge-base': return <KnowledgeBasePage />;
+          case 'analytics': return <AnalyticsPage />;
+          case 'reports': return <ReportsPage />;
+          case 'settings': return <SettingsPage />;
+          case 'admin': return <AdminPanelPage />;
+          default: return <DashboardPage />;
+        }
+      };
+
+      return (
+        <Box sx={{
+          display: 'flex',
+          minHeight: '100vh',
+          bgcolor: darkMode ? '#111827' : '#F8FAFC',
+          color: darkMode ? '#F9FAFB' : '#1F2937',
+          transition: 'background-color 0.2s, color 0.2s',
+          '& .MuiPaper-root': darkMode ? { bgcolor: '#1F2937', borderColor: '#374151', color: '#F9FAFB' } : {},
+          '& .MuiTableCell-root': darkMode ? { color: '#E5E7EB', borderColor: '#374151' } : {},
+          '& .MuiTableCell-head': darkMode ? { bgcolor: '#111827', color: '#F3F4F6' } : {},
+          '& .MuiInputBase-root': darkMode ? { color: '#F9FAFB', bgcolor: '#374151', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#4B5563' } } : {}
+        }}>
+          <Sidebar />
+          <Box display="flex" flexDirection="column" flexGrow={1} overflow="hidden">
+            <Navbar />
+            <Box flexGrow={1} overflow="auto">
+              {renderPage()}
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    function App() {
+      return (
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
